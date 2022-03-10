@@ -1,0 +1,144 @@
+\chapter{Теоретические вопросы}
+
+\begin{enumerate}[wide=0pt]
+\item \textit{Базис Lisp.} \\
+\begin{enumerate}
+	\item атомы и структуры (представляющиеся бинарными узлами);
+	\item несколько базовых функций и функционалов: встроенные --- примитивные функции (atom, eq, cons, car, cdr); специальные функции и функционалы (quote, cond, lambda, eval, apply, funcall).
+\end{enumerate}
+\item \textit{Классификация функций.} \\
+\begin{enumerate}
+	\item чистые (математические) функции: имеют фиксированное количество
+	аргументов и в качестве возврата единственное значение;
+	\item рекурсивные функции;
+	\item специальные функции (формы): имеют произвольное количество
+	аргументов, либо эти аргументы обрабатываются не все одинаково;
+	\item псевдофункции: функции, эффект которых виден на внешних
+	устройствах;
+	\item функции с вариантными значениями, из которых выбирается одно;
+	\item функции высших порядков (функционалы) используются для
+	построения синтаксически-управляемых программ, в качестве одного
+	из аргументов принимают описание функции.
+\end{enumerate}
+\item \textit{Способы создания функций} \\
+Обычно функции определяются при помощи макроса DEFUN. В качестве имени может использоваться любой символ. Как правило, имена функций содержат только буквы, цифры и знак минус. Список параметров функции определяет переменные, которые будут использоваться для хранения аргументов, переданных при вызове функции. Тело DEFUN состоит из любого числа выражений Lisp. 
+
+\item \textit{Работа функций Cond, if, and/or} \\
+IF --- (if test then-body else-body) является формой. Сначала вычисляется тестовое test-выражение. Если оно истинно, вычисляется then-выражение и возвращается его значение. В противном случае вычисляется else-выражение. \\ \\
+COND --- имеет два преимущества: неограниченное количество условных переходов и неявное использование progn в каждом из них. Его имеет смысл использовать в случае, когда третий аргумент if – другое условное выражение. Каждый аргумент должен быть представлен списком, состоящим из условия и следующих за ним выражений, которые будут вычисляться в случае истинности этого условия. При вычислении вызова cond условия проверяются по очереди до тех пор, пока одно из них не окажет ся истинным. Далее вычисляются выражения, следующие за этим условием, и возвращается значение последнего из них. Если после выражения,
+оказавшегося истинным, нет других выражений, то возвращается его значение.\\\\
+OR, AND --- оба могут принимать любое количество аргументов, но вычисляют их до тех пор, пока не будет ясно, какое значение необходимо вернуть. Если все аргументы истинны (не nil), то and (or) вернет значение последнего.
+
+
+\end{enumerate}
+\chapter{Практические задания}
+
+\begin{enumerate}[wide=0pt]
+\item \textit{Написать функцию, которая принимает целое число и возвращает первое
+четное число, не меньшее аргумента.}
+\begin{lstlisting}
+(defun closest-even (x) 
+(if (evenp x)
+  x
+  (if (> x 0)
+    (- x 1)
+    (+ x 1))))
+\end{lstlisting}
+
+\item \textit{Написать функцию, которая принимает число и возвращает число
+того же знака, но с модулем на 1 больше модуля аргумента.}
+\begin{lstlisting}
+(defun greater (x) 
+  (if (< x 0)
+    (- x 1)
+    (+ x 1)))
+\end{lstlisting}
+\item \textit{Написать функцию, которая принимает два числа и возвращает
+список из этих чисел, расположенный по возрастанию.}
+\begin{lstlisting}
+(defun pair (x y)
+  (if (< x y)
+    (list x y)
+    (list y x)))
+\end{lstlisting}
+\item \textit{Написать функцию, которая принимает три числа и возвращает Т только
+тогда, когда первое число расположено между вторым и третьим.}
+\begin{lstlisting}
+(defun is-between (f s th)
+  (if (or (and (> f s) (< f th)) (and (> f th) (< f s)))
+       t
+       nil))
+\end{lstlisting}
+\item\textit{ Каков результат вычисления следующих выражений?}
+\begin{tasks}[label=\arabic*), item-indent=3pt, after-item-skip=1pt](2)
+	\task \lstinline|(and 'fee 'fie 'foe)|
+	\task \lstinline|(or nil 'fie 'foe)|
+	\task \lstinline|(and (equal 'abc 'abc) 'yes)|
+	\task \lstinline|(or 'fee 'fie 'foe)|
+	\task \lstinline|(and nil 'fie 'foe)|
+	\task \lstinline|(or (equal 'abc 'abc) 'yes)|
+\end{tasks}
+Решения:
+\begin{tasks}[label=\arabic*), item-indent=3pt, after-item-skip=1pt](2)
+	\task \lstinline|FOE|
+	\task \lstinline|FIE|
+	\task \lstinline|YES|
+	\task \lstinline|FEE|
+	\task \lstinline|NIL|
+	\task \lstinline|T|
+\end{tasks}
+\item {Написать предикат, который принимает два числа-аргумента и возвращает Т, если первое число не меньше второго.}
+\begin{lstlisting}
+(defun not-less (x y) 
+  (>= x y))
+\end{lstlisting}
+\item\textit{Какой из следующих двух вариантов предиката ошибочен и почему?}
+\begin{multicols}{2}
+\begin{enumerate}[label=\arabic*), leftmargin=17pt]
+\item\begin{itemlisting}[language=lisp]
+(defun pred1 (x)
+  (and (numberp x) (plusp x)))
+\end{itemlisting}
+\item\begin{itemlisting}[language=lisp]
+(defun pred2 (x)
+  (and (plusp x) (numberp x)))
+\end{itemlisting}
+\end{enumerate}
+\end{multicols}
+Решение. \\ Поскольку AND вычисляет аргументы до тех пор, пока не будет ясно, какой ответ надо вернуть, предикат 2 при первой проверке вернет NIL и завершит работу не вызывая plusp. Значит, ошибочен вариант №2.
+\item \textit{Решить задачу 4, используя для ее решения конструкции IF, COND, AND/OR.}
+\begin{lstlisting}
+(defun is-between-cond (lst)
+  (cond ((and (> (first lst) (second lst)) (< (first lst) (third lst))) t)
+        (t nil)))
+\end{lstlisting}
+\item \textit{Переписать функцию how-alike, приведенную в лекции и использующую COND, используя только конструкции IF, AND/OR.}\\
+AND/OR:
+\begin{lstlisting}
+(defun is-betweenp(f s th)
+  (or (and (> f s) (< f th)) (and (> f th) (< f s))))
+\end{lstlisting}
+COND:
+\begin{lstlisting}
+(defun is-between-cond(f s th)
+  (cond ((> f s) (cond ((< f th))
+                       (t nil)))
+        ((> f th) t)))
+\end{lstlisting}
+IF:
+\begin{lstlisting}
+(defun is-between-if (f s th)
+  (if (> f s)
+    (if (< f th)
+      t
+      (if (< f s)
+        (if (> f th)
+          t
+          nil)
+        nil))
+    (if (> f th)
+      t)))
+\end{lstlisting}
+
+\end{enumerate}
+
