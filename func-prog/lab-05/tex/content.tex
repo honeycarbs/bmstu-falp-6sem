@@ -1,0 +1,113 @@
+\chapter{Теоретические вопросы}
+
+\begin{enumerate}[wide=0pt]
+\item \textit{Cтруктуроразрушающие и не разрушающие структуру списка функции.} \\
+Не разрушающие структуру функции не меняют сам объект-аргумент, а создают его копию. Например, reverse, append.
+
+Разрушающие структуру функции меняют объект-аргумент, и получить исходный уже невозможно. Такие функции начинаются с префикса n: nconc, nreverse. 
+\item \textit{Отличие в работе функций cons, list, append, nconc и в их результате.} \\
+
+\begin{enumerate}
+	\item cons конструирует точечную пару или список, в зависимости от второго аргумента. Является чистой функцией, принимает два аргумента;
+	\item list является формой, принимает произвольное количество аргументов и составляет из них список. Результатом работы всегда является список.
+	\item append является формой, принимает произвольное количество аргументов, создает копию для всех, кроме последнего, при этом последний элемент каждого списка-аргумента ссылается на первый элемент следующего по порядку списка-аргумента (или его копию, в зависимости от расположения).
+	\item nconc возвращает список с элементами из всех списков-аргументов (по порядку). Принцип работы: устанавливает cdr последней ячейки каждого списка в начало следующего списка. Последний аргумент может быть объектом любого типа. Вызванная без аргументов, возвращает nil.
+\end{enumerate} 
+
+   
+\end{enumerate}
+\chapter{Практические задания}
+\begin{enumerate}[wide=0pt]
+\item \textit{Написать функцию, которая по своему списку-аргументу lst определяет является ли он палиндромом (то есть равны ли lst и (reverse lst))}
+\begin{lstlisting}
+(defun polyp(lst) 
+	(equal lst (reverse lst)))
+\end{lstlisting}
+\item \textit{Написать предикат set-equal, который возвращает t, если два его \\ множества-аргумента содержат одни и те же элементы, порядок которых не имеет значения.}
+\begin{lstlisting}
+(defun set-equal (set1 set2)
+  (and (= (length set1) (length set2))
+       (every #'(lambda (elem) (member elem set2 :test #'equal)) 
+        set1)
+       (every #'(lambda (elem) (member elem set1 :test #'equal)) 
+        set2)))
+\end{lstlisting}
+\item \textit{Напишите свои необходимые функции, которые обрабатывают таблицу из 4-х точечных пар:\\(страна . столица), и возвращают по стране - столицу, а по столице --- страну .}
+\begin{lstlisting}	
+(defun search-country (captl table)
+  (cond ((null table) nil)
+    ((eq captl (cdar table)) (caar table))
+    (t (search-country captl (cdr table)))))
+
+(defun search-capital (cntry table)
+  (cond ((null table) nil)
+        ((eq cntry (caar table)) (cdar table))
+        (t (search-capital cntry (cdr table)))))
+        
+(defun search-country-rassoc (captl table)
+  (car (rassoc captl table)))
+
+(defun search-capital-assoc (cntry table)
+  (cdr (assoc cntry table)))
+\end{lstlisting}
+\item \textit{Напишите функцию swap-first-last, которая переставляет в списке-аргументе первый и последний элементы.} \newpage
+\begin{lstlisting}
+(defun swap-first-last (lst)
+  (let* ((tmp (reverse (cdr lst)))
+		 (mid (reverse (cdr tmp))))
+		(cons (car tmp) (append mid (list (car lst))))))
+\end{lstlisting}
+\item \textit{Напишите функцию swap-two-element, которая переставляет в списке- аргументе два указанных своими порядковыми номерами элемента в этом списке.}
+\begin{lstlisting}
+(defun swap-two-elements(lst i j) 
+  (if (or (> i (length lst)) (> j (length lst)))
+    lst
+    (let ((fst (nth i lst))
+         (snd (nth j lst)))
+         (progn (setf (nth i lst) snd) (setf (nth j lst) fst) lst))))
+\end{lstlisting}
+\item \textit{Напишите две функции, swap-to-left и swap-to-right, которые производят одну круговую перестановку в списке-аргументе влево и вправо, соответственно.}
+\begin{lstlisting}
+(defun shift-to-left(lst)
+  (let* ((tmp (cdr lst))
+		 (fnl (car lst)))
+		(append tmp (list fnl))))
+	
+(defun shift-to-right(lst)
+  (let* ((tmp (reverse (cdr (reverse lst))))
+         (fnl (car (reverse lst))))
+ 	    (cons fnl tmp)))
+\end{lstlisting}
+\item \textit{Напишите функцию, которая добавляет к множеству двухэлементных списков новый двухэлементный список, если его там нет.}
+\begin{lstlisting}	
+(defun add-list(src dest)
+  (if (some #'(lambda (pair) (equal dest pair)) src)
+     src
+     (append src (list dest))))
+\end{lstlisting}
+\item \textit{Напишите функцию, которая умножает на заданное число-аргумент первый числовой элемент списка из заданного 3-х элементного списка-аргумента, когда:}
+\begin{enumerate}
+	\item \textit{все элементы списка --- числа,}
+	\item \textit{элементы списка -- любые объекты.}
+\end{enumerate}
+\begin{lstlisting}
+;; (a)
+(defun multiply-lst-num (lst mul)
+  (mapcar #'(lambda (elem) (* elem mul)) lst))
+
+;; (b)
+(defun multiply-lst (lst mul)
+  (mapcar #'(lambda (elem) (cond ((listp elem) (multiply-lst elem mul))
+                                 ((numberp elem) (* elem mul))
+                                 (t elem)))
+   lst))
+\end{lstlisting}
+\item \textit{Напишите функцию, select-between, которая из списка-аргумента из 5 чисел выбирает только те, которые расположены между двумя указанными границами-аргументами и возвращает их в виде списка (упорядоченного по возрастанию списка чисел (+ 2 балла)).}
+\begin{lstlisting}
+(defun select-between (lst left right)
+  (sort (reduce #'(lambda (res el) 
+                     (if (and (> el left) (< el right))
+                       (cons el res)
+                       res)) lst :initial-value ()) #'<))
+\end{lstlisting}
+\end{enumerate}
