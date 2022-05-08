@@ -1,0 +1,299 @@
+\textsc{\huge Лабораторная работа 12(1)} \\
+Составить программу, т.е. модель предметной области – базу знаний, объединив в ней информацию -- знания:
+\begin{itemize}
+	\item <<Телефонный справочник>>: Фамилия, №тел, Адрес -- структура (Город, Улица, №дома, №кв),
+	\item <<Автомобили>>: Фамилия\_владельца, Марка, Цвет, Стоимость, и др.,
+	\item <<Вкладчики банков>>: Фамилия, Банк, счет, сумма, др.
+\end{itemize}
+Владелец может иметь несколько телефонов, автомобилей, вкладов (Факты). Используя правила, обеспечить возможность поиска:
+\begin{enumerate}
+	\item \begin{tasks}[label=\asbuk*)](1)
+		\task По № телефона найти: Фамилию, Марку автомобиля, Стоимость автомобиля (может быть несколько);
+		\task  Используя сформированное в пункте а) правило, по № телефона найти: только Марку автомобиля (автомобилей может быть несколько).
+	\end{tasks}
+	\item Используя простой, не составной вопрос: по Фамилии (уникальна в городе, но в разных городах есть однофамильцы) и Городу проживания найти:
+	Улицу проживания, Банки, в которых есть вклады и №телефона.
+\end{enumerate}
+
+\begin{lstlisting}
+domains
+  name = symbol.
+  phoneNumber = symbol.
+  city = symbol.
+  street = symbol.
+  houseNumber = integer.
+  flatNumber = integer.
+  fullAddress = address(city, street, houseNumber, flatNumber)
+  carBrand = symbol.
+  carColor = symbol.
+  carCost = integer.
+  bankName = symbol.
+  bankAccount = symbol.
+  accountCost = integer.
+  predicates
+  UsingNumber(name, phoneNumber, fullAddress).
+  UsingCar(name, carBrand, carColor, carCost).
+  BankDepositor(name, bankName, bankAccount, accountCost).
+  FindPersonByNumber(phoneNumber, name, carBrand, carCost).
+  FindCarBrandByNumber(phoneNumber, carBrand).
+  FindPersonByNameCity(name, city, phoneNumber, street, bankName).
+  FindPersonByBrandColor(carBrand, carColor, name, city, phoneNumber, bankName).
+
+clauses
+  UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).
+  UsingNumber("Kazaeva", "88123616141", address("St. Petersburg", "Not Baumansksya st.", 68, 1336)).
+  UsingNumber("Paraskun", "83452878650", address("Moscow", "Ladojskaya st.", 1488, 666)).
+  UsingNumber("Suprunova", "88638423840", address("Moscow", "Novaya Doroga st.", 999, 666)).
+  UsingNumber("Alferova", "84232958684", address("Moscow", "Bakuninskaya st.", 969, 696)).
+  UsingCar("Kazaeva", "BMW", "Pink", 35700).
+  UsingCar("Suprunova", "Cadillac", "Black", 36895).
+  UsingCar("Kazaeva", "Ford", "White", 46190).
+  UsingCar("Suprunova", "Ferrari", "Red", 625000).
+  UsingCar("Alferova", "Ferrari", "Red", 625000).
+  BankDepositor("Paraskun", "Not Sberbank", "07279163", 6900000).
+  BankDepositor("Kazaeva", "Tinkoff", "50679823", 3).
+  BankDepositor("Alferova", "VTB", "41572869", 300000).
+  BankDepositor("Suprunova", "Dorama Bank", "92033800", 50000).
+  FindPersonByNumber(PhoneNumber, Name, CarBrand, CarCost) :- UsingNumber(Name, PhoneNumber, _), UsingCar(Name, CarBrand, _, CarCost).
+  FindCarBrandByNumber(PhoneNumber, CarBrand) :- FindPersonByNumber(PhoneNumber, _, CarBrand, _).
+  FindPersonByNameCity(Name, City, PhoneNumber, Street, BankName) :- UsingNumber(Name, PhoneNumber, address(City, Street, _, _)), BankDepositor(Name, BankName, _, _).
+  FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) :- UsingCar(Name, CarBrand, CarColor, _), UsingNumber(Name, PhoneNumber, address(City, _, _, _)), BankDepositor(Name, BankName, _, _).
+goal
+  FindPersonByNumber("88123616141", Name, CarBrand, CarCost). % 1(A)
+  FindCarBrandByNumber("88638423840", CarBrand). % 1 (B)
+\end{lstlisting}
+
+Для одного из вариантов ответов, и для а) и для б), описать словесно порядок поиска ответа на вопрос, указав, как выбираются знания, и, при этом, для каждого этапа унификации, выписать подстановку -- наибольший общий унификатор, и соответствующие примеры термов.
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|c|}{\# шага} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{1} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение \\ FindPersonByNumber("88123616141", Name, CarBrand, CarCost). \\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)). \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{14} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение FindPersonByNumber("88123616141", Name, CarBrand, CarCost). и \\ FindPersonByNumber(PhoneNumber, Name, CarBrand, CarCost)\\ Унификация успешна.\\ Подстановка:\{Phone\_number =88123616141,\\ Name = Name, CarBrand = CarBrand,\\ CarCost = CarCost\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к терму правила.\\ Унификация\\ UsingNumber(Name, "88123616141", \_)\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{15} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение\\ UsingNumber(Name, "88123616141", \_)\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{16} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение\\ UsingNumber(Name, "88123616141", \_)\\ UsingNumber("Kazaeva", "88123616141", address("St. Petersburg", "Not Baumansksya st.", 68, 1336)).\\ Унификация успешна. \\ Подстановка: \{Name="Kazaeva"\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующем терму\\ правила\\ UsingCar(“Kazaeva”, CarBrand, \_, CarCost).\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{17} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Kazaeva”, CarBrand, \_, CarCost). и\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{22} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Kazaeva”, CarBrand, \_, CarCost). и\\ UsingCar("Kazaeva", "BMW", "Pink", 35700).\\ Унификация успешна.\\ Подстановка \{CarBrand = "BMW",\\ CarCost = 35700\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Сохранение подстановки \{Name =\\ “Kazaeva”, CarBrand = "BMW",\\ CarCost = 35700\} в памяти.\\ Реконкретизация CarBrand и CarCost.\\ Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{28} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Kazaeva”, CarBrand, \_, CarCost). и UsingCar("Kazaeva", "Ford", "White", 46190).\\ Унификация успешна.\\ Подстановка \{CarBrand = "Ford",\\ CarCost = 46190\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Сохранение подстановки \{Name =\\ “Kazaeva”,\{Car\_brand = "Ford",\\ Car\_cost = 46190\}\} в памяти.\\ Реконкретизация CarBrand и CarCost.\\ Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{29} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Kazaeva”, CarBrand, \_, CarCost). и UsingCar("Suprunova", "Ferrari", "Red", 625000).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|c|}{\# шага} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{37} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Kazaeva”, CarBrand, \_, CarCost). и \\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход. Реконкретизация Name.\\ Переход к следующему предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{38} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение\\ UsingNumber(Name, "88123616141", \_)\\ UsingNumber("Paraskun", "83452878650", address("Moscow", "Ladojskaya st.", 1488, 666)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход.; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|r|}{50} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение FindPersonByNumber("88123616141", Name, CarBrand, CarCost). и\\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Обратный ход.; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{1}{|c|}{51} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение FindPersonByNumber("88123616141", Name, CarBrand, CarCost). и\\ FindCarBrandByNumber(PhoneNumber, CarBrand)\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{54} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение FindPersonByNumber("88123616141", Name, CarBrand, CarCost). и\\ FindCarBrandByNumber(PhoneNumber, CarBrand) и\\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к вопросу.\\ Отображение результата.\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{1} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение FindCarBrandByNumber("88638423840", CarBrand). и\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{15} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение FindCarBrandByNumber("88638423840", CarBrand). и\\ FindCarBrandByNumber(PhoneNumber, CarBrand)\\ Унификация успешна.\\ Подстановка:\{PhoneNumber =88638423840,\\ Name = Name, CarBrand = CarBrand\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к терму правила.\\ Унификация\\ FindPersonByNumber(88638423840, \_, CarBrand, \_).\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{16} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение FindPersonByNumber(88638423840, \_, CarBrand, \_). \\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{27} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение FindPersonByNumber(88638423840, \_, CarBrand, \_).  и \\ FindPersonByNumber(88638423840, Name, CarBrand, CarCost). \\ Унификация успешна.\\ Подстановка: \{Car\_brand = Car\_brand\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к терму правила.\\ Унификация\\ FindPersonByNumber(88638423840, \_,\\ CarBrand, \_)\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{28} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingNumber(Name, "88638423840", \_) и\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{32} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение  UsingNumber(Name, "88638423840", \_)  и\\ UsingNumber("Suprunova", "88638423840", address("Moscow", "Novaya Doroga st.", 999, 666)).\\ Унификация успешна.\\ Подстановка: \{Surname=”Suprunova”\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{44} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingNumber("Suprunova", "88638423840", \_)  и\\ fFindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход; переход к следующему\\ терму правила\\ UsingCar(“Suprunova”, CarBrand, \_, CarCost)\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{45} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Suprunova”, CarBrand, \_, CarCost) и\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{62} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Suprunova”, CarBrand, \_, CarCost) и\\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход. Реконкретизация Name.\\ Переход к следующему предложению.\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{63} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Suprunova”, CarBrand, \_, CarCost) и\\ UsingCar("Suprunova", "Cadillac", "Black", 36895).\\ Унификация успешна. Подстановка: \{CarBrand =\\ "Cadillac", CarCost = 36895\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Сохранение подстановки \{CarBrand =\\ "Cadillac", CarCost = 36895\} в памяти; прямой ход;\\ Реконкретизация Car\_brand, Car\_cost.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{65} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Suprunova”, CarBrand, \_, CarCost) и\\ UsingCar("Suprunova", "Ferrari", "Red", 625000).Унификация успешна.\\ Подстановка: \{CarBrand = "Ferrari", CarColor = "Red",\\ Car\_cost = 625000\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Сохранение подстановки: \{CarBrand = "Ferrari", CarColor = "Red",Car\_cost = 625000\}\\ в памяти; прямой ход;\\ Реконкретизация Car\_brand, Car\_cost.\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{66} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение UsingCar(“Suprunova”, CarBrand, \_, CarCost)  и\\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход; возвращение к терму\\ FindPersonByNumber(PhoneNumber, \_, CarBrand, \_).\\ Реконкретизация Name в обеих\\ подстановках.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{68} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравнение find\_car\_brand\_by\_number("+7(984)874-\\ 91-23", Car\_brand)  и\\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход; возвращение к вопросу.\\ Восстановление результата из памяти.\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+\textsc{\huge Лабораторная работа 12(2)} \\
+Составить программу, объединив в ней информацию-знания (12.1).
+По Марке и Цвету автомобиля найти Фамилию, Город, Телефон и Банки, в которых владелец автомобиля имеет вклады. \\
+Владельца может быть несколько (не более трех), один и ни одного. \\
+\begin{tasks}[label=\arabic*]
+	\task Для каждого из трех вариантов подробно описать порядок формирования ответа в виде таблицы. При этом указать -- отметить моменты очередного запуска алгоритма унификации и полный результат его работы. Обосновать следующий шаг работы системы. Выписать унификаторы – подстановки. Указать моменты, причины и результат отката, если он есть.
+	\task Для случая нескольких владельцев (2-х). Приведите пример (таблицы)
+	работы системы при разных порядках следования в БЗ процедур, и знаний в них (<<Телефонный справочник>>, <<Автомобили>>, <<Вкладчики банков>> или <<Автомобили>>, <<Вкладчики банков>>, <<Телефонный справочник>>). Сделать вывод: одинаковы ли множество работ и объем в разных случаях.
+	\task Оформите 2 таблицы, демонстрирующие порядок работы алгоритма
+	унификации вопроса и подходящего заголовка правила (для двух случаев из пункта 2) и укажите результаты его работы: ответ и побочный
+	эффект.
+\end{tasks}
+\begin{lstlisting}
+goal
+  FindPersonByBrandColor("BMW", "Black", Name, City, PhoneNumber, BankName). % (no solutions)
+  FindPersonByBrandColor("Ford", "White", Name, City, PhoneNumber, BankName). % 1 solution
+  FindPersonByBrandColor("Ferrari", "Red", Name, City, PhoneNumber, BankName). % 2 solutions
+\end{lstlisting}
+
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|l|}{\# шага} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular}} \\ \hline
+			\multicolumn{1}{|r|}{1} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение FindPersonByBrandColor("BMW", "Black", Name, City, PhoneNumber, BankName). и\\ phone("Pavlov", "+7(934)245-34-12",\\ address("Moscow", "St.1905 year", 20, 154))\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{17} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение FindPersonByBrandColor("BMW", "Black", Name, City, PhoneNumber, BankName) \\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\\ Унификация успешна.\\ Подстановка:\{ CarBrand = “BMW”,\\ CarColor = "Black"\}\end{tabular}} & \multicolumn{1}{l|}{Прямой ход; переход к терму правилa UsingCar(Name, CarBrand, CarColor, \_)} \\ \hline
+			\multicolumn{1}{|r|}{18} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, “BMW”, "Black", \_)\\ и \\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{23} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, “BMW”, "Black", \_)\\ и \\ UsingCar("Kazaeva", "BMW", "Pink", 35700).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{34} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, “BMW”, "Black", \_)\\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Обратный ход до правила; вновь откат\\ ввиду невыполнения первого условия\\ конъюнкции.\end{tabular}} \\ \hline
+			\multicolumn{1}{|r|}{35} & \multicolumn{2}{l|}{Выдать сообщение “No solution”} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|l|}{\# шага} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular}} \\ \hline
+			\multicolumn{1}{|r|}{1} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение FindPersonByBrandColor("Ford", "White", Name, City, PhoneNumber, BankName). \\ и\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{18} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение FindPersonByBrandColor("Ford", "White", Name, City, PhoneNumber, BankName). \\ и\\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\\ Унификация успешна.\\ Подстановка:\{ CarBrand = "Ford",\\ CarColor = "White"\}\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к терму правила.\\ Унификация\\ UsingCar(Name, CarBrand, CarColor, \_)\end{tabular}} \\ \hline
+			\multicolumn{1}{|r|}{19} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ford", "White", \_) и\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{26} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ford", "White", \_) и\\ UsingCar("Paraskun", "Ford", "White", 46190).\\ Унификация успешна.\\ Подстановка: \{ Surname = "Paraskun"\}\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Обратный ход; переход к следующему\\ терму правила\\ UsingNumber(Name, PhoneNumber, address(City, \_, \_, \_))\end{tabular}} \\ \hline
+			\multicolumn{1}{|r|}{27} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Paraskun", PhoneNumber,\\ address(City, \_, \_, \_)) и \\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{29} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Paraskun", PhoneNumber,\\ address(City, \_, \_, \_)) и \\ UsingNumber("Paraskun", "83452878650", address("Moscow", "Ladojskaya st.", 1488, 666)).\\ Унификация успешна.\\ Подстановка: \{Phone\_number="83452878650",\\ City="Moscow"\}\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Обратный ход; переход к следующему\\ терму правила\\ BankDepositor(Name, BankName, \_, \_).\end{tabular}} \\ \hline
+			\multicolumn{1}{|r|}{30} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение bankDepositor(“Paraskun”, BankName, \_, \_)\\ и \\ UsingNumber("Suprunova", "88638423840", address("Moscow", "Novaya Doroga st.", 999, 666)).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular}} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{36} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение bankDepositor(“Paraskun”, BankName, \_, \_)\\ и\\ BankDepositor("Paraskun", "Not Sberbank", "07279163", 6900000). \\ Унификация успешна.\\ Подстановка: \{ Bank\_name ="Not Sberbank"\}\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Обратный ход; переход к следующему\\ терму правила; термов больше нет.\\ Обратный ход (база знаний закончилась).\\ Вывод результатов на экран.\end{tabular}} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|l|}{\# шага} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{1} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение FindPersonByBrandColor("Ferrari", "Red", Name, City, PhoneNumber, BankName).\\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{18} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение \\ FindPersonByBrandColor("Ferrari", "Red", Name, City, PhoneNumber, BankName).\\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\\ Унификация успешна.\\ Подстановка:\{ Car\_brand = "Ferrari",\\ Car\_color = "Red"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к терму правила.\\ Унификация\\ UsingCar(Name, CarBrand, CarColor, \_)\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{24} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ferrari", "Red", \_) и \\ UsingCar("Suprunova", "Ferrari", "Red", 625000).\\ Унификация успешна.\\ Подстановка: \{ Surname = "Suprunova"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход. Добавление терма с\\ подстановкой в память. Переход к\\ следующему предложению.\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{25} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ferrari", "Red", \_) и \\ UsingCar("Alferova", "Ferrari", "Red", 625000).\\ Унификация успешна.\\ Подстановка: \{ Surname = "Alferova"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход. Добавление терма с\\ подстановкой в память. Переход к\\ следующему предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{34} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ferrari", "Red", \_) и \\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Обратный ход (база знаний закончилась);\\ переход к следующему терму правила\\ UsingNumber(Name, PhoneNumber, address(City, \_, \_, \_))\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{35} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Alferova", PhoneNumber, address(City, \_, \_, \_)) \\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{39} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Alferova", PhoneNumber, address(City, \_, \_, \_)) \\ и UsingNumber("Alferova", "84232958684", address("Moscow", "Bakuninskaya st.", 969, 696)).\\ Унификация успешна.\\ Подстановка \{PhoneNumber=84232958684, City="Moscow"\}.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{51} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Alferova", PhoneNumber, address(City, \_, \_, \_)) \\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Обратный ход(база знаний закончилась);\\ переход к следующему терму правила\\ BankDepositor(Name, BankName, \_, \_).\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{52} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение BankDepositor("Alferova", BankName, \_, \_).\\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|l|}{\# шага} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{64} &  \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение BankDepositor("Alferova", BankName, \_, \_).\\ и BankDepositor("Alferova", "VTB", "41572869", 300000).\\ Унификация успешна.\\ Подстановка \{BankName = "VTB"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению\\ Сохранение в памяти для данного терма подстановки\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{69} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение BankDepositor("Alferova", BankName, \_, \_).\\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Обратный ход(база знаний закончилась);\\ Возврат к предыдущему терму\\ UsingNumber("Suprunova", PhoneNumber, address(City, \_, \_, \_)) с подстановкой из шага 39;\\ обратный ход из шага 39;\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{Аналогичные шаги 37-69, но для новой подстановки} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{104} & \multicolumn{1}{l|}{Аналогичные шаги 24-63 для новой подстановки} & \begin{tabular}[c]{@{}l@{}}Обратный ход (база знаний закончилась);\\ вывод результата на экран.\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|l|}{\# шага} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{1} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение FindPersonByBrandColor("Ferrari", "Red", Name, City, PhoneNumber, BankName).\\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{18} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение \\ FindPersonByBrandColor("Ferrari", "Red", Name, City, PhoneNumber, BankName).\\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName)\\ Унификация успешна.\\ Подстановка:\{ Car\_brand = "Ferrari",\\ Car\_color = "Red"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к терму правила.\\ Унификация\\ UsingCar(Name, CarBrand, CarColor, \_)\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{24} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ferrari", "Red", \_) и \\ UsingCar("Suprunova", "Ferrari", "Red", 625000).\\ Унификация успешна.\\ Подстановка: \{ Surname = "Suprunova"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход. Добавление терма с\\ подстановкой в память. Переход к\\ следующему предложению.\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{25} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ferrari", "Red", \_) и \\ UsingCar("Alferova", "Ferrari", "Red", 625000).\\ Унификация успешна.\\ Подстановка: \{ Surname = "Alferova"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход. Добавление терма с\\ подстановкой в память. Переход к\\ следующему предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{34} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingCar(Name, "Ferrari", "Red", \_) и \\ FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Обратный ход (база знаний закончилась);\\ переход к следующему терму правила\\ UsingNumber(Name, PhoneNumber, address(City, \_, \_, \_))\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{35} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Alferova", PhoneNumber, address(City, \_, \_, \_)) \\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{39} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Alferova", PhoneNumber, address(City, \_, \_, \_)) \\ и UsingNumber("Alferova", "84232958684", address("Moscow", "Bakuninskaya st.", 969, 696)).\\ Унификация успешна.\\ Подстановка \{PhoneNumber=84232958684, City="Moscow"\}.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{51} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение UsingNumber("Alferova", PhoneNumber, address(City, \_, \_, \_)) \\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Обратный ход(база знаний закончилась);\\ переход к следующему терму правила\\ BankDepositor(Name, BankName, \_, \_).\end{tabular} \\ \hline
+			\multicolumn{1}{|r|}{52} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение BankDepositor("Alferova", BankName, \_, \_).\\ и UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline	
+		\end{tabular}
+	}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|l|}{\# шага} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{64} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение BankDepositor("Alferova", BankName, \_, \_).\\ и BankDepositor("Alferova", "VTB", "41572869", 300000).\\ Унификация успешна.\\ Подстановка \{BankName = "VTB"\}\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход; переход к следующему\\ предложению\\ Сохранение в памяти для данного терма подстановки\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{69} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Сравнение BankDepositor("Alferova", BankName, \_, \_).\\ и FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) \\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Обратный ход(база знаний закончилась);\\ Возврат к предыдущему терму\\ UsingNumber("Suprunova", PhoneNumber, address(City, \_, \_, \_)) с подстановкой из шага 39;\\ обратный ход из шага 39;\end{tabular} \\ \hline
+			\multicolumn{3}{|l|}{Аналогичные шаги 37-69, но для новой подстановки} \\ \hline
+			\multicolumn{3}{|l|}{...} \\ \hline
+			\multicolumn{1}{|r|}{104} & \multicolumn{1}{l|}{Аналогичные шаги 24-63 для новой подстановки} & \begin{tabular}[c]{@{}l@{}}Обратный ход (база знаний закончилась);\\ вывод результата на экран.\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}

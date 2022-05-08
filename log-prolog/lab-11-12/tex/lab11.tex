@@ -1,0 +1,67 @@
+\textsc{\huge Лабораторная работа 11(1)} \\
+
+Запустить среду Visual Prolog5.2. Настроить утилиту TestGoal (способ настройки см. в дополнительных материалах к лаб. раб.). Запустить тестовую программу, проанализировать реакцию системы и множество ответов. Разработать свою программу -- <<Телефонный справочник>>. Протестировать работу программы.
+
+\begin{lstlisting}
+domains
+name, phoneNumber = symbol.
+
+predicates
+  usingNumber(name, phoneNumber).
+
+clauses
+  usingNumber("Tatiana", "88352318975").
+  usingNumber("Sofia", "83452878650").
+  usingNumber("Ekaterina", "84232958684").
+  usingNumber("Irina", "842323318119").
+  usingNumber("Egor", "83452878650").
+
+goal
+  usingNumber(Name, "88352318975");
+  usingNumber(Name, "88005553535");
+  usingNumber("Tatiana", "88352318975");
+  usingNumber("Sofia", "88352318975");
+  usingNumber("Sofia", PhoneNumber);
+  usingNumber("Sofia", _).
+\end{lstlisting}
+
+~\newline
+
+\textsc{\huge Лабораторная работа 11(2)} \\
+Составить программу – базу знаний, с помощью которой можно определить, например, множество студентов, обучающихся в одном ВУЗе и их телефоны. Студент может одновременно обучаться в нескольких ВУЗах. Привести примеры возможных вариантов вопросов и варианты ответов (не менее 3-х). Описать порядок формирования вариантов
+ответа. \\
+Исходную базу знаний сформировать с помощью только фактов. \\
+*Исходную базу знаний сформировать, используя правила. \\
+**Разработать свою базу знаний (содержание произвольно).\\
+\begin{lstlisting}
+domains
+  id = unsigned.
+  name, uni = symbol.
+
+predicates
+  StudentId(id, name).
+  StudyIn(id, uni).
+  StudentsFromUniversity(uni, id, name).
+
+clauses
+  StudentId(0, "Tatiana").
+  StudentId(1, "Ekaterina").
+  StudentId(2, "Sofia").
+  StudentId(3, "Irina").
+  StudentId(4, "Egor").
+
+  StudyIn(0, "BMSTU").
+  StudyIn(1, "BMSTU").
+  StudyIn(2, "BMSTU").
+  StudyIn(3, "BMSTU").
+  StudyIn(4, "BMSTU").
+  StudyIn(0, "IKBFU").
+  StudyIn(2, "Cambridge").
+  StudyIn(3, "MIREA").
+
+  StudentsFromUniversity(University, Id, Name) :- StudentId(Id, Name), StudyIn(Id, University).
+
+goal
+  % StudentsFromUniversity("BMSTU", Id, Name).
+  StudentsFromUniversity(Uni, Id, "Tatiana").
+\end{lstlisting}

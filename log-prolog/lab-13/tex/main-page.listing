@@ -1,0 +1,51 @@
+domains
+name = symbol.
+phoneNumber = symbol.
+city = symbol.
+street = symbol.
+houseNumber = integer.
+flatNumber = integer.
+fullAddress = address(city, street, houseNumber, flatNumber)
+
+carBrand = symbol.
+carColor = symbol.
+carCost = integer.
+
+bankName = symbol.
+bankAccount = symbol.
+accountCost = integer.
+predicates
+UsingNumber(name, phoneNumber, fullAddress).
+UsingCar(name, carBrand, carColor, carCost).
+BankDepositor(name, bankName, bankAccount, accountCost).
+
+FindPersonByNumber(phoneNumber, name, carBrand, carCost).
+FindCarBrandByNumber(phoneNumber, carBrand).
+FindPersonByNameCity(name, city, phoneNumber, street, bankName).
+FindPersonByBrandColor(carBrand, carColor, name, city, phoneNumber, bankName).
+
+clauses
+UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).
+UsingNumber("Kazaeva", "88123616141", address("St. Petersburg", "Not Baumansksya st.", 68, 1336)).
+UsingNumber("Paraskun", "83452878650", address("Moscow", "Ladojskaya st.", 1488, 666)).
+UsingNumber("Suprunova", "88638423840", address("Moscow", "Novaya Doroga st.", 999, 666)).
+UsingNumber("Alferova", "84232958684", address("Moscow", "Bakuninskaya st.", 969, 696)).
+
+UsingCar("Kazaeva", "BMW", "Pink", 35700).
+UsingCar("Suprunova", "Cadillac", "Black", 36895).
+UsingCar("Paraskun", "Ford", "White", 46190).
+UsingCar("Suprunova", "Ferrari", "Red", 625000).
+UsingCar("Alferova", "Ferrari", "Red", 625000).
+
+BankDepositor("Paraskun", "Not Sberbank", "07279163", 6900000).
+BankDepositor("Kazaeva", "Tinkoff", "50679823", 3).
+BankDepositor("Alferova", "VTB", "41572869", 300000).
+BankDepositor("Suprunova", "Dorama Bank", "92033800", 50000).
+
+FindPersonByNumber(PhoneNumber, Name, CarBrand, CarCost) :- UsingNumber(Name, PhoneNumber, _), UsingCar(Name, CarBrand, _, CarCost).
+FindCarBrandByNumber(PhoneNumber, CarBrand) :- FindPersonByNumber(PhoneNumber, _, CarBrand, _).
+FindPersonByNameCity(Name, City, PhoneNumber, Street, BankName) :- UsingNumber(Name, PhoneNumber, address(City, Street, _, _)), BankDepositor(Name, BankName, _, _).
+FindPersonByBrandColor(CarBrand, CarColor, Name, City, PhoneNumber, BankName) :- UsingCar(Name, CarBrand, CarColor, _), UsingNumber(Name, PhoneNumber, address(City, _, _, _)), BankDepositor(Name, BankName, _, _).
+goal
+%FindPersonByNumber("88123616141", Name, CarBrand, CarCost).
+% FindCarBrandByNumber("88638423840", CarBrand).

@@ -1,0 +1,134 @@
+\textsc{\huge Лабораторная работа 13} \\
+Создать базу знаний «Собственники» , дополнив (и минимально изменив) базу
+знаний, хранящую знания (лаб. 12) знаниями о дополнительной собственности владельца. Преобразовать знания об автомобиле к форме знаний о собственности.
+Вид собственности (кроме автомобиля):
+\begin{tasks}[label=\arabic*]
+	\task Строение, стоимость и другие его характеристики;
+	\task Участок, стоимость и другие его характеристики;
+	\task Водный транспорт, стоимость и другие его характеристики.
+\end{tasks}
+Описать и использовать вариантный домен: Собственность. Владелец может иметь,
+но только один объект каждого вида собственности (это касается и автомобиля), или не иметь некоторых видов собственности.
+
+Используя конъюнктивное правило и
+разные формы задания одного вопроса (пояснять для какого №задания – какой вопрос),
+обеспечить возможность поиска:
+\begin{tasks}[label=\arabic*]
+	\task Названий всех объектов собственности заданного субъекта,
+	\task Названий и стоимости всех объектов собственности заданного субъекта,
+	\task * Разработать правило, позволяющее найти суммарную стоимость всех
+	объектов собственности заданного субъекта.
+\end{tasks}
+Для 2-го пункт и одной фамилии составить таблицу, отражающую конкретный
+порядок работы системы, с объяснениями порядка работы и особенностей использования
+доменов.
+
+\begin{lstlisting}
+domains
+  price = integer.
+
+  name = symbol.
+  phoneNumber = symbol.
+  city = symbol.
+  street = symbol.
+  houseNumber = integer.
+  flatNumber = integer.
+  fullAddress = address(city, street, houseNumber, flatNumber)
+
+  carBrand = symbol.
+  carColor = symbol.
+  carCost = integer.
+
+  bankName = symbol.
+  bankAccount = symbol.
+  accountCost = integer.
+
+  propertyName = symbol.
+  type = symbol.
+  property = building(propertyName, type, price);
+    land(propertyName, type, price);
+    waterTransport(propertyName, type, price);
+    car(propertyName, carBrand, carColor, price).
+predicates
+  UsingNumber(name, phoneNumber, fullAddress).
+  BankDepositor(name, bankName, bankAccount, accountCost).
+  Ownes(name, property).
+
+  FindPersonByNameProperty(name, name, propertyName).
+  FindPersonByNamePriceProperty(name, name, propertyName, price).
+
+  FindSum(name, price).
+  FindSumPriceProperties(name, price).
+  IfHasProperty(name, type, price).
+
+clauses
+  UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).
+  UsingNumber("Kazaeva", "88123616141", address("St. Petersburg", "Not Baumansksya st.", 68, 1336)).
+  UsingNumber("Paraskun", "83452878650", address("Moscow", "Ladojskaya st.", 1488, 666)).
+  UsingNumber("Suprunova", "88638423840", address("Moscow", "Novaya Doroga st.", 999, 666)).
+  UsingNumber("Alferova", "84232958684", address("Moscow", "Bakuninskaya st.", 969, 696)).
+
+  Ownes("Kazaeva", car("MyBMW", "BMW", "Pink", 35700)).
+  Ownes("Suprunova", car("Vot eto tachka", "Ferrari", "Red", 625000)).
+  Ownes("Paraskun", building("Vot eto villa", "Villa near Pacific Ocean", 1488000000)).
+  Ownes("Kazaeva", land("Island in SIms", "Sims Lot", 500)).
+  Ownes("Alferova", waterTransport("MyPinkPig", "Canoe", 69000000)).
+
+  BankDepositor("Paraskun", "Not Sberbank", "07279163", 6900000).
+  BankDepositor("Kazaeva", "Tinkoff", "50679823", 3).
+  BankDepositor("Alferova", "VTB", "41572869", 300000).
+  BankDepositor("Suprunova", "Dorama Bank", "92033800", 50000).
+
+  IfHasProperty(Name, car, Price) :-  Ownes(Name, car(_, _, _, Price)), !.
+  IfHasProperty(Name, building, Price) :-  Ownes(Name, building(_, _, Price)), !.
+  IfHasProperty(Name, waterTransport, Price) :-  Ownes(Name, waterTransport(_, _, Price)), !.
+  IfHasProperty(Name, land, Price) :-  Ownes(Name, land(_, _, Price)), !.
+  IfHasProperty(_,_,0).
+
+  FindSum(Name, SumPrice) :- IfHasProperty(Name, car, CarPrice), IfHasProperty(Name, building, BuildPrice), IfHasProperty(Name, waterTransport, WaterPrice), IfHasProperty(Name, land, LandPrice),
+  SumPrice = CarPrice + BuildPrice + WaterPrice + LandPrice.
+
+  FindPersonByNameProperty(Name, Name, PropertyName) :- Ownes(Name, car(PropertyName, _, _, _)).
+  FindPersonByNameProperty(Name, Name, PropertyName) :- Ownes(Name, building(PropertyName, _, _)).
+  FindPersonByNameProperty(Name, Name, PropertyName) :- Ownes(Name, waterTransport(PropertyName, _, _)).
+  FindPersonByNameProperty(Name, Name, PropertyName) :- Ownes(Name, land(PropertyName, _, _)).
+
+  FindPersonByNamePriceProperty(Name, Name, PropertyName, Price) :- Ownes(Name, car(PropertyName, _, _, Price)).
+  FindPersonByNamePriceProperty(Name, Name, PropertyName, Price) :- Ownes(Name, building(PropertyName, _, Price)).
+  FindPersonByNamePriceProperty(Name, Name, PropertyName, Price) :- Ownes(Name, waterTransport(PropertyName, _, Price)).
+  FindPersonByNamePriceProperty(Name, Name, PropertyName, Price) :- Ownes(Name, land(PropertyName, _, Price)).
+
+  FindSumPriceProperties(Name, SumPrice) :- findSum(Name, SumPrice).	
+goal
+  FindPersonByNamePriceProperty("Kazaeva", Name, PropertyName, Price).
+  %FindSumPriceProperties("Kazaeva", SumPrice).
+\end{lstlisting}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccc|}
+			\hline
+			\multicolumn{1}{|c|}{\# шага} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Сравниваемые термы; результат;\\ Подстановка, если есть\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Дальнейшие действия: прямой ход или\\ откат (к чему приводит?)\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{1} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ FindPersonByNamePriceProperty("Kazaeva", Name, PropertyName, Price).\\ UsingNumber("Kazaeva", "88126152221", address("Moscow", "Baumanskaya st.", 69, 1337)).\\ Унификация неуспешна\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{24} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ FindPersonByNamePriceProperty("Kazaeva", Name, PropertyName, Price).\\ FindPersonByNamePriceProperty(Name, Name, PropertyName, Price)\\ Унификация успешна.\\ Подстановка \{Name = "Kazaeva"\}\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к терму правила:\\ Ownes(Name, car(PropertyName, \_, \_, Price)).\\ Конкретизация Surname значением\\ "Kazaeva".\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{30} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ Ownes("Kazaeva", car(PropertyName, \_, \_, Price)).\\ Ownes("Kazaeva", car("MyBMW", "BMW", "Pink", 35700)).\\ Унификация успешна.\\ Подстановка \{ProperyName = "MyBMW", Price="35700"\}.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\\ Сохранение результата в памяти.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{33} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ Ownes("Kazaeva", car(PropertyName, \_, \_, Price)).\\ Ownes("Kazaeva", land("Island in SIms", "Sims Lot", 500)).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{54} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ Ownes("Kazaeva", car(PropertyName, \_, \_, Price)).\\ FindSumPriceProperties(Name, SumPrice) :- findSum(Name, SumPrice).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход, просмотрена вся БЗ;\\ переход к терму,\\ следующему после терма из шага 24:\\ fFindPersonByNamePriceProperty(Name, Name, PropertyName, Price) :- Ownes(Name, building(PropertyName, \_, Price)).\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{55} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ FindPersonByNamePriceProperty("Kazaeva", Name, PropertyName, Price) и\\ FindPersonByNamePriceProperty(Name, Name, PropertyName, Price).\\ Унификация успешна.\\ Подстановка: \{Surname = "Kazaeva"\}.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к терму правила:\\ Ownes(Name, building(PropertyName, \_, Price)).\\ Конкретизация Surname значением\\ "Kazaeva".\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{84} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ Ownes("Kazaeva", building(PropertyName, \_, Price)). и\\ FindSumPriceProperties(Name, SumPrice) :- findSum(Name, SumPrice).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход, просмотрена вся БЗ -\\ переход к следующему терму,\\ следующему после терма из шага 54:\\ FindPersonByNamePriceProperty(Name, Name, PropertyName, Price) :- Ownes(Name, waterTransport(PropertyName, \_, Price)).\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{113} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ Ownes("Kazaeva", waterTransport(PropertyName, \_, Price)). и\\ FindSumPriceProperties(Name, SumPrice) :- findSum(Name, SumPrice).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход, просмотрена вся БЗ -\\ переход к следующему терму,\\ следующему после терма из шага 84:\\ FindPersonByNamePriceProperty(Name, Name, PropertyName, Price) :- Ownes(Name, land(PropertyName, \_, Price)).\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{122} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ Ownes("Kazaeva", land(PropertyName, \_, Price)). и\\ Ownes("Kazaeva", land("Island in SIms", "Sims Lot", 500)).\\ Унификация успешна.\\ \{PropertyName = "Island in SIms", Price = 500\}.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход; переход к следующему\\ предложению.\\ Сохранение результата в памяти.\end{tabular} \\ \hline
+			\multicolumn{3}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{145} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Попытка унификации:\\ Ownes("Kazaeva", land(PropertyName, \_, Price)).  и\\ FindSumPriceProperties(Name, SumPrice) :- findSum(Name, SumPrice).\\ Унификация неуспешна.\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Обратный ход (просмотрена вся БЗ);\\ Вывод результатов.\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}

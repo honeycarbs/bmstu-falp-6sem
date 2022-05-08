@@ -1,0 +1,60 @@
+\textsc{\huge Лабораторная работа 14} \\
+Создать базу знаний: <<Предки>>, позволяющую определить:
+\begin{tasks}[label=\arabic*]
+	\task по имени субъекта определить всех его бабушек (предки 2-го колена),
+	\task по имени субъекта определить всех его дедушек (предки 2-го колена),
+	\task по имени субъекта определить всех его бабушек и дедушек (предки 2-го колена),
+	\task по имени субъекта определить его бабушку по материнской линии (предки 2-го колена),
+	\task по имени субъекта определить его бабушку и дедушку по материнской линии (предки 2-го колена).
+\end{tasks}
+
+\begin{lstlisting}
+domains
+  name, gender = symbol.
+  person = person(name, gender).
+
+predicates
+  IsParent(person, person).
+  IsGrandparent(person, gender, person).
+clauses
+  IsGrandparent(person(GName, GGender), Line, person(CName, CGender)) :- 
+    IsParent(person(GName, GGender), person(PName, Line)), IsParent(person(PName, _), person(CName, CGender)).
+
+  IsParent(person("Olga", "Woman"), person("Tatiana", "Woman")).
+  IsParent(person("Alexey", "Man"), person("Tatiana", "Woman")).
+  IsParent(person("Valentina", "Woman"), person("Alexey", "Man")).
+  IsParent(person("Uriy", "Man"), person("Alexey", "Man")).
+  IsParent(person("Natalia", "Woman"), person("Olga", "Woman")).
+  IsParent(person("Igor", "Man"), person("Olga", "Woman")).
+goal
+  IsGrandparent(person(Name, "Woman"), _, person("Tatiana", "Woman")). % 1
+  IsGrandparent(person(Name, "Man"), _, person("Tatiana", "Woman")). % 2
+  IsGrandparent(person(Name, _), _, person("Tatiana", "Woman")). % 3
+  IsGrandparent(person(Name, "Woman"),"Woman", person("Tatiana", "Woman")).% 4
+  IsGrandparent(person(Name, _), "Woman", person("Tatiana", "Woman")). % 5
+\end{lstlisting}
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+		\begin{tabular}{|ccccc|}
+			\hline
+			\multicolumn{1}{|c|}{\# шага} & \multicolumn{1}{c|}{Термы} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Состояние\\ резольвенты\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Конкретизированные\\ переменные\end{tabular}} & Дальнейшие действия \\ \hline
+			\multicolumn{1}{|c|}{1} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для \\ IsGrandparent(person(Name, "Woman"), \_, person("Tatiana", "Woman")). и\\ IsGrandparent(person(GName, GGender), Line, person(CName, CGender)).\\ Унификация успешна.\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}IsParent(person(PName, \_), person("Tatiana", "Woman"))\\ IsParent(person(Name, "Woman"), person(PName, \_))\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = Name\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход, попытка унификации \\ IsParent(person(PName, \_), person("Tatiana", "Woman"))\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{2} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для\\ IsParent(person(PName, \_), person("Tatiana", "Woman"))\\ IsGrandparent(person(GName, GGender), Line, person(CName, CGender))\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}IsParent(person(PName, \_), person("Tatiana", "Woman"))\\ IsParent(person(Name, "Woman"), person(PName, \_))\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = Name\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход, переход к следующему\\ предложению\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{3} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для\\ IsParent(person(PName, \_), person("Tatiana", "Woman"))\\  и \\ IsParent(person("Olga", "Woman"), person("Tatiana", "Woman")).\\ Унификация успешна.\end{tabular}} & \multicolumn{1}{c|}{IsParent(person(Name, "Woman"), person("Olga", \_))} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = Name\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\\ PName = "Olga"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход, попытка унификации\\  isParent (person(Name, "Woman"), person("Olga", \_))\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{4} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для\\ IsParent(person(Name, "Woman"), person("Olga", \_))\\  и \\ IsGrandparent(person(GName, GGender), Line, person(CName, CGender)).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{c|}{IsParent(person(Name, "Woman"), person("Olga", \_))} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = Name\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\\ PName = "Olga"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход, переход к следующему\\ предложению\end{tabular} \\ \hline
+			\multicolumn{5}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{9} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для\\ IsParent(person(Name, "Woman"), person("Olga", \_))\\ и IsParent(person("Natalia", "Woman"), person("Olga", "Woman")).\\  Унификация успешна.\end{tabular}} & \multicolumn{1}{c|}{-} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = "Natalia"\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\\ PName = "Olga"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Получен результат (Gname = "Natalia"). Откат, \\ откат к следующему предложению\\ относительно 3 - БЗ кончилась\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{10} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для \\ IsParent(person(PName, \_), person("Tatiana", "Woman"))\\ и IsParent(person("Alexey", "Man"), person("Tatiana", "Woman")). \\ Унификация успешна.\end{tabular}} & \multicolumn{1}{c|}{isParent(human(Nname, "Woman"), human("Alexey", \_))} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = Name\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\\ PName = "Alexey"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход, попытка унификации \\ isParent (person(Name, "Woman"), person("Alexey", \_))\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{11} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для\\ isParent(human(Name, "Woman"),human("Alexey", \_)) \\ и IsGrandparent(person(GName, GGender), Line, person(CName, CGender)).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{c|}{isParent(human(Nname, "Woman"), human("Alexey", \_))} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = Name\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\\ PName = "Alexey"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход, переход к следующему\\ предложению\end{tabular} \\ \hline
+			\multicolumn{1}{|c|}{12} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для\\ isParent(human(Name, "Woman"),human("Alexey", \_)).\\ и IsParent(person("Valentina", "Woman"), person("Alexey", "Man")).\\  Унификация успешна.\end{tabular}} & \multicolumn{1}{c|}{-} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = "Valentina"\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\\ PName = "Alexey"\end{tabular}} & Получен результат (Gname = "Valentina"). Откат. \\ \hline
+			\multicolumn{5}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{15} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для \\ isParent(human(Name, "Woman"),human("Alexey", \_)).\\ и IsParent(person("Uriy", "Man"), person("Alexey", "Man")).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}IsParent(person(PName, \_), person("Tatiana", "Woman"))\\ IsParent(person(Name, "Woman"), person(PName, \_))\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}GName = "Valentina"\\ GGender = "Woman"\\ CName = "Tatiana"\\ CGender = "Woman"\end{tabular}} & \begin{tabular}[c]{@{}c@{}}Прямой ход, переход к следующему\\ предложению\end{tabular} \\ \hline
+			\multicolumn{5}{|c|}{...} \\ \hline
+			\multicolumn{1}{|c|}{17} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для \\ isParent(human(Name, "Woman"),human("Alexey", \_)).\\ и IsParent(person("Igor", "Man"), person("Olga", "Woman")).\\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{c|}{IsGrandparent(person(Name, "Woman"), \_, person("Tatiana", "Woman")).} & \multicolumn{1}{c|}{Пусто} & Откат, следующее предложение относительно 1 \\ \hline
+			\multicolumn{1}{|c|}{18} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для\\ IsGrandparent(person(Name, "Woman"), \_, person("Tatiana", "Woman")). \\ и IsParent(person("Olga", "Woman"), person("Tatiana", "Woman")).\\ Унификация неуспешна\end{tabular}} & \multicolumn{1}{c|}{IsGrandparent(person(Name, "Woman"), \_, person("Tatiana", "Woman")).} & \multicolumn{1}{c|}{Пусто} & \begin{tabular}[c]{@{}c@{}}Прямой ход, переход к следующему\\ предложению\end{tabular} \\ \hline
+		\end{tabular}
+	}
+\end{sidewaystable}

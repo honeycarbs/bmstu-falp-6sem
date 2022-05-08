@@ -1,0 +1,106 @@
+\textsc{\huge Лабораторная работа 15} \\
+В одной программе написать правила, позволяющие найти:
+\begin{enumerate}[label=\arabic*.]
+	\item Максимум из двух чисел: 
+	\begin{tasks}[label=\asbuk*)]
+			\task без использования отсечения,
+			\task с использованием отсечения.
+		\end{tasks}
+	\item Максимум из трех чисел: 
+	\begin{tasks}[label=\asbuk*)]
+		\task без использования отсечения,
+		\task с использованием отсечения.
+	\end{tasks}
+\end{enumerate}
+Для одного из вариантов вопроса и каждого варианта задания 2 составить таблицу, отражающую конкретный порядок работы системы.
+\begin{lstlisting}
+domains
+  num = integer.
+
+predicates
+  Max2(num, num, num).
+  Max3(num, num, num, num).
+  Max2Cut(num, num, num).
+  Max3Cut(num, num, num, num).
+
+clauses
+  Max2(Num1, Num2, Num1) :- Num1 >= Num2.
+  Max2(Num1, Num2, Num2) :- Num2 >= Num1.
+
+  Max3(Num1, Num2, Num3, Num1) :- Num1 >= Num2, Num1 >= Num3.
+  Max3(Num1, Num2, Num3, Num2) :- Num2 >= Num1, Num2 >= Num3.
+  Max3(Num1, Num2, Num3, Num3) :- Num3 >= Num1, Num3 >= Num2.
+
+  Max2Cut(Num1, Num2, Num1) :- Num1 >= Num2, !.
+  Max2Cut(_, Num2, Num2).
+
+  Max3Cut(Num1, Num2, Num3, Num1) :- Num1 >= Num2, Num1 >= Num3, !.
+  Max3Cut(_, Num2, Num3, Num2) :- Num2 >= Num3, !.
+  Max3Cut(_, _, Num3, Num3).
+
+goal
+  Max2Cut(1, 2, Max).
+\end{lstlisting}
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+	\begin{tabular}{ccccc}
+		\hline
+		\multicolumn{1}{|c|}{\# шага} & \multicolumn{1}{c|}{Термы} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Состояние\\ резольвенты\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Конкретизированные\\ переменные\end{tabular}} & \multicolumn{1}{c|}{Дальнейшие действия} \\ \hline
+		\multicolumn{1}{|c|}{1} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для Max3(3, 1, 2, Max)\\ и Max2(Num1, Num2, Num1). Унификация неуспешна.\end{tabular}} & \multicolumn{1}{c|}{Max3(3, 1, 2, Max)} & \multicolumn{1}{c|}{Пусто} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Прямой ход, переход к следующему\\ предложению\end{tabular}} \\ \hline
+		\multicolumn{5}{|c|}{...} \\ \hline
+		\multicolumn{1}{|c|}{3} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для max3(3, 1, 2, Max)\\ и max3(Num1, Num2, Num3, Num1). \\ Унификация успешна.\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}3 \textgreater{}= 2\\ 3 \textgreater{}= 1\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ Max = Num1\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Прямой ход, решение цели\\ резольвенты 3 \textgreater{}= 2\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{4} & \multicolumn{1}{c|}{3 \textgreater{}= 2 Верно.} & \multicolumn{1}{c|}{3 \textgreater{}= 1} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ Max = Num1\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Прямой ход, решение цели\\ резольвенты 3 \textgreater{}= 1\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{5} & \multicolumn{1}{c|}{3 \textgreater{}= 1 Верно.} & \multicolumn{1}{c|}{Пусто} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ Max = 3\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Переменная Max реконкретизирована.\\ Откат, переход к следующему относительно шага 3\\ предложению.\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{6} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для Max3(3, 1, 2, Max) и\\ Max3(Num1, Num2, Num3, Num2). \\ Унификация успешна\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}1 \textgreater{}= 2\\ 1 \textgreater{}= 3\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ Max = Num2\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Прямой ход, решение цели\\ резольвенты 1 \textgreater{}= 2\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{7} & \multicolumn{1}{c|}{1 \textgreater{}= 2 Неверно.} & \multicolumn{1}{c|}{Max3(3, 1, 2, Max)} & \multicolumn{1}{c|}{Пусто} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Откат, переход к следующему предложению\\ относительно шага 6.\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{8} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для Max3(3, 1, 2, Max) и\\ Max3(Num1, Num2, Num3, Num3). \\ Унификация успешна\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}2 \textgreater{}= 1\\ 2 \textgreater{}= 3\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ Max = Num3\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Прямой ход, решение цели\\ резольвенты 2 \textgreater{}= 1\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{9} & \multicolumn{1}{c|}{2 \textgreater{}= 1 Верно.} & \multicolumn{1}{c|}{2 \textgreater{}= 3} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ Max = Num3\end{tabular}} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Прямой ход, решение цели\\ резольвенты 2 \textgreater{}=3\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{10} & \multicolumn{1}{c|}{2 \textgreater{}= 3 Неверно.} & \multicolumn{1}{c|}{Max3(3, 1, 2, Max)} & \multicolumn{1}{c|}{Пусто} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Откат, переход к следующему предложению\\ относительно шага 8.\end{tabular}} \\ \hline
+		\multicolumn{1}{|c|}{11} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для Max3(3, 1, 2, Max) и\\ Max3Cut(Num1, Num2, Num3, Num1). \\ Унификация неуспешна\end{tabular}} & \multicolumn{1}{c|}{Max3(3, 1, 2, Max)} & \multicolumn{1}{c|}{Пусто} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Прямой ход, переход к следующему\\ предложению.\end{tabular}} \\ \hline
+		\multicolumn{5}{|c|}{...} \\ \hline
+		\multicolumn{1}{|c|}{13} & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Запуск алгоритма унификации для Max3(3, 1, 2, Max) и\\ Max3Cut(\_, \_, Num3, Num3). Унификация неуспешна\end{tabular}} & \multicolumn{1}{c|}{Max3(3, 1, 2, Max)} & \multicolumn{1}{c|}{Пусто} & \multicolumn{1}{c|}{Завершение работы, вывод результата на экран.} \\ \hline
+		\multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{}
+	\end{tabular}
+	}
+\end{sidewaystable}
+
+
+\begin{sidewaystable}
+	\medskip
+	\resizebox{\linewidth}{!}{%
+		\tabcolsep=2pt
+	\begin{tabular}{|ccccc|}
+		\hline
+		\multicolumn{1}{|l|}{\# шага} & \multicolumn{1}{l|}{Термы} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Состояние\\ резольвенты\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Конкретизированные\\ переменные\end{tabular}} & Дальнейшие действия \\ \hline
+		\multicolumn{1}{|r|}{1} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Запуск алгоритма унификации для max3Cut(3, 1, 2, QMax) и\\ max2(Num1, Num2, Num1). \\ Унификация неуспешна.\end{tabular}} & \multicolumn{1}{l|}{Max3Cut(3, 1, 2, QMax)} & \multicolumn{1}{l|}{Пусто} & \begin{tabular}[c]{@{}l@{}}Прямой ход, переход к следующему\\ предложению.\end{tabular} \\ \hline
+		\multicolumn{5}{|l|}{...} \\ \hline
+		\multicolumn{1}{|r|}{8} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Запуск алгоритма унификации для\\ Max3Cut(3, 1, 2, QMax) и\\ Max3Cut(Num1, Num2, Num3, Num1). \\ Унификация успешна.\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}3 \textgreater{}= 2\\ 3 \textgreater{}= 1\\ !\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ QMax = Num1\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход, решение цели из\\ резольвенты 3 \textgreater{}= 2\end{tabular} \\ \hline
+		\multicolumn{1}{|r|}{9} & \multicolumn{1}{l|}{3 \textgreater{}= 2 Верно.} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}3 \textgreater{}= 1\\ !\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ QMax = Num1\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Прямой ход, решение цели из\\ резольвенты 3 \textgreater{}= 1\end{tabular} \\ \hline
+		\multicolumn{1}{|r|}{10} & \multicolumn{1}{l|}{3 \textgreater{}= 1 Верно.} & \multicolumn{1}{l|}{Пусто} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Num1 = 3\\ Num2 = 1\\ Num3 = 2\\ QMax = 3\end{tabular}} & \begin{tabular}[c]{@{}l@{}}Реконкретизация Max, оператор\\ отсечения, откат к пункту 8, завершение работы, поскольку\\ метка на последнем предложении БЗ\end{tabular} \\ \hline
+	\end{tabular}
+	}
+\end{sidewaystable}
+
+
+%\pagenumbering{gobble}
+%\begin{sidewaystable}
+%	\medskip
+%	\resizebox{\linewidth}{!}{%
+%		\tabcolsep=2pt
+%		\begin{tabular}{|c|l|l|}
+%			\hline
+%			Задача & \multicolumn{1}{c|}{PostgreSQL} & \multicolumn{1}{c|}{Prolog} \\ \hline
+%			\begin{tabular}[c]{@{}c@{}}S - поставщик S(Sno: integer, Sname: string, Status: integer, City:\\ string)\end{tabular} & \begin{tabular}[c]{@{}l@{}}create table S (\\   Sno integer,\\   Sname varchar(50),\\   Status integer,\\   City varchar(50)\\ );\end{tabular} & \begin{tabular}[c]{@{}l@{}}sno = integer. \\   sname = symbol.\\   status = integer. \\   city = symbol.\\   S(sno, sname, status, city).\end{tabular} \\ \hline
+%			\begin{tabular}[c]{@{}c@{}}P - деталь P(Pno: integer, Pname: string, Color: string, Weight:\\ real, City: string)\end{tabular} & \begin{tabular}[c]{@{}l@{}}create table P (\\   Pno integer,\\   Pname varchar(50),\\   Color varchar(50),\\   Weight decimal,\\   City varchar(50)\\ );\end{tabular} & \begin{tabular}[c]{@{}l@{}}pno = integer.\\   pname = symbol.\\   color = symbol. \\   weight = real.\\   P(pno, pname, color, weight, city).\end{tabular} \\ \hline
+%			SP - Таблица связка SP(Sno: integer, Pno: integer, Qty: integer) & \begin{tabular}[c]{@{}l@{}}create table SP (\\   Sno integer,\\   Pno integer,\\   Qty integer\\ );\end{tabular} & \begin{tabular}[c]{@{}l@{}}qty = integer.\\   SP(sno, pno, qty).\end{tabular} \\ \hline
+%			Внести данные (S) & \begin{tabular}[c]{@{}l@{}}insert into P (pno, pname, color, weight, city) values\\     (1, 'Гвоздь', 'К',10.3,'Москва'),\\     (2, 'Винт', 'К', 15.8, 'Рязань'),\\     (3, 'Гвоздь', 'С',3.4, 'Смоленск');\\ \textbackslash{}endlstlisting\end{tabular} & \begin{tabular}[c]{@{}l@{}}P(1, "Nail", "R", 10.3, "Moscow").\\   P(2, "Screw", "R", 15.8, "Ryazan").\\   P(3, "Nail", "B", 3.4, "Smolensk").\end{tabular} \\ \hline
+%			Внести данные (P) & \begin{tabular}[c]{@{}l@{}}insert into S(sno, sname, status, city) values\\     (1, 'ООО Ромашка', 5, 'Рязань'),\\     (2, 'ООО Рубин', 3, 'Красногорск');\end{tabular} & \begin{tabular}[c]{@{}l@{}}S(1, "OOO Daisy", 5, "Ryazan").\\   S(2, "OOO Ruby", 3, "Krasnogorsk").\end{tabular} \\ \hline
+%			Внести данные (SP) & \begin{tabular}[c]{@{}l@{}}insert into sp(sno, pno, qty) values\\     (1, 1, 4000),\\     (1, 2, 5000),\\     (1, 3, 6000),\\     (2, 1, 1000),\\     (2, 3, 7000);\end{tabular} & \begin{tabular}[c]{@{}l@{}}SP(1, 1, 4000).\\   SP(1, 2, 5000).\\   SP(1, 3, 6000).\\   SP(2, 1, 1000).\\   SP(2, 3, 7000).\end{tabular} \\ \hline
+%			Получить имена поставщиков, которые поставляют деталь под номером 2 & \begin{tabular}[c]{@{}l@{}}select Sname from S\\     join SP on S.Sno = SP.Sno\\     where SP.Pno = 2;\end{tabular} & \begin{tabular}[c]{@{}l@{}}SuplierByDetail(Pno, SName) :- S(Sno, Sname, \_, \_), SP(Sno, Pno, \_).\\ \\   SuplierByDetail(2, SName).\end{tabular} \\ \hline
+%			Получить имена поставщиков, которые поставляют по крайней мере одну красную деталь & \begin{tabular}[c]{@{}l@{}}select Sname from S\\     join SP on S.Sno = SP.Sno\\     join P on P.Pno = SP.Pno\\     where color = 'К';\end{tabular} & \begin{tabular}[c]{@{}l@{}}SuplierWithOneColoredDetail(Color, Sname) :- \\     S(Sno, Sname, \_, \_), SP(Sno, Pno, \_), \\     P(Pno, \_, Color, \_, \_).\\ \\    SuplierWithOneColoredDetail("R", Sname).\end{tabular} \\ \hline
+%		\end{tabular}
+%	}
+%\end{sidewaystable}
+
